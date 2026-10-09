@@ -1,0 +1,925 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Justicieros Ecológicos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Layout: guía en forma de "selector de niveles": barra HUD fija, héroe con escena pixel art donde caen residuos a sus canecas, y secciones en bloques de borde duro y sombra sólida. La boldness vive en el amarillo sol (CTA, objetivo, selección). */
+:root{
+  --bg:#F1F6EC; --surface:#FFFFFF; --surface-2:#E2EFDC; --fg:#10241A; --muted:#47604F;
+  --line:#10241A; --shadow:#10241A;
+  --green:#1F7A3A; --on-green:#FFFFFF; --link:#17612F;
+  --sun:#F4C20D; --on-sun:#10241A; --red:#B3321F; --stage:#D8ECDA;
+  --font-display:"Press Start 2P", ui-monospace, "Courier New", monospace;
+  --font-body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-hud:"VT323", ui-monospace, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1812; --surface:#14261C; --surface-2:#1A3024; --fg:#E7F2E9; --muted:#9DB9A6;
+    --line:#7FB08E; --shadow:#000000;
+    --green:#4CC46C; --on-green:#08170E; --link:#8BE0A2;
+    --sun:#F4C20D; --on-sun:#10241A; --red:#FF8A78; --stage:#D8ECDA;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1812; --surface:#14261C; --surface-2:#1A3024; --fg:#E7F2E9; --muted:#9DB9A6;
+  --line:#7FB08E; --shadow:#000000;
+  --green:#4CC46C; --on-green:#08170E; --link:#8BE0A2;
+  --sun:#F4C20D; --on-sun:#10241A; --red:#FF8A78; --stage:#D8ECDA;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font:400 17px/1.6 var(--font-body);margin:0}
+h1,h2,h3,p,ul,ol,dl,dd{margin:0}
+ul,ol{padding:0;list-style:none}
+a{color:var(--link)}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;image-rendering:pixelated}
+:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.wrap{width:min(1120px,100%);margin-inline:auto;padding-inline:16px}
+@media (min-width:720px){.wrap{padding-inline:24px}}
+.hud{font-family:var(--font-hud);letter-spacing:.04em}
+
+/* ---------- Nav ---------- */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:3px solid var(--line)}
+.nav .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;font:400 10px/1.4 var(--font-display);text-decoration:none;color:var(--fg);margin-right:auto}
+.brand canvas{width:28px;height:28px}
+.nav-links{display:flex;gap:4px;overflow-x:auto;order:3;flex:1 0 100%;padding-bottom:2px}
+.nav-links a{font:400 21px/1 var(--font-hud);letter-spacing:.04em;text-decoration:none;color:var(--fg);padding:6px 10px;white-space:nowrap;border:2px solid transparent}
+.nav-links a:hover{background:var(--sun);color:var(--on-sun);border-color:var(--line)}
+.theme-btn{font:400 20px/1 var(--font-hud);letter-spacing:.04em;background:var(--surface);color:var(--fg);border:3px solid var(--line);padding:5px 10px;cursor:pointer}
+.theme-btn:hover{background:var(--sun);color:var(--on-sun)}
+@media (min-width:900px){
+  .nav-links{order:0;flex:0 1 auto;padding-bottom:0}
+  .brand{margin-right:0}
+  .nav .wrap{flex-wrap:nowrap}
+  .nav-links{margin-right:auto;margin-left:16px}
+}
+
+/* ---------- Botones ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:400 11px/1.4 var(--font-display);text-align:center;text-decoration:none;color:var(--fg);background:var(--surface);border:3px solid var(--line);padding:14px 16px;box-shadow:4px 4px 0 var(--shadow);cursor:pointer;transition:transform .1s,box-shadow .1s,background .1s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--shadow);background:var(--surface-2)}
+.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--shadow)}
+.btn.sun{background:var(--sun);color:var(--on-sun)}
+.btn.sun:hover{background:#FFD43B}
+.btn.green{background:var(--green);color:var(--on-green)}
+.btn.small{font-size:10px;padding:10px 12px}
+
+/* ---------- Hero ---------- */
+.hero{padding-block:40px 64px}
+.hero .wrap{display:grid;gap:36px;align-items:center}
+@media (min-width:880px){.hero .wrap{grid-template-columns:1.12fr .88fr;gap:48px}}
+.hero-text{display:grid;gap:20px;min-width:0}
+.eyebrow{font:400 22px/1.2 var(--font-hud);letter-spacing:.08em;text-transform:uppercase;color:var(--link)}
+h1{font:400 clamp(22px,5.4vw,44px)/1.35 var(--font-display);text-wrap:balance;overflow-wrap:anywhere}
+h1 .sub{display:block;margin-top:14px;font-size:.52em;line-height:1.5;color:var(--link)}
+.lead{font-size:clamp(18px,2.2vw,21px);max-width:34em;color:var(--fg)}
+.credits{display:flex;flex-wrap:wrap;gap:8px}
+.tag{font:400 20px/1 var(--font-hud);letter-spacing:.03em;border:2px solid var(--line);background:var(--surface);padding:6px 10px}
+.cta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:6px}
+.stage{position:relative;aspect-ratio:1;width:100%;max-width:440px;justify-self:center;border:3px solid var(--line);box-shadow:8px 8px 0 var(--shadow);overflow:hidden;background:var(--stage)}
+.stage .bg{position:absolute;inset:0;width:100%;height:100%}
+.stage .spr{position:absolute;height:auto}
+.stage .bin{width:26%;bottom:3%}
+.stage .b1{left:2%}.stage .b2{left:37%}.stage .b3{left:72%}
+.stage .fall{width:14%;top:0;animation:drop 4.8s cubic-bezier(.4,0,.8,.6) infinite backwards}
+.stage .f1{left:8%;animation-delay:0s}
+.stage .f2{left:43%;animation-delay:1.6s}
+.stage .f3{left:78%;animation-delay:3.2s}
+@keyframes drop{
+  0%{transform:translateY(-130%);opacity:0}
+  8%{opacity:1}
+  70%{transform:translateY(420%);opacity:1}
+  76%{transform:translateY(430%);opacity:0}
+  100%{transform:translateY(430%);opacity:0}
+}
+.stage .b2{animation:wob 4.8s 1.6s infinite}
+@keyframes wob{0%,66%{transform:none}70%{transform:translateY(4%)}76%,100%{transform:none}}
+
+/* ---------- Secciones ---------- */
+.sec{padding-block:68px;scroll-margin-top:96px}
+.sec.band{background:var(--surface-2);border-block:3px solid var(--line)}
+.sec-head{display:grid;gap:14px;max-width:46rem;margin-bottom:34px}
+.kicker{display:flex;align-items:center;gap:10px;font:400 21px/1 var(--font-hud);letter-spacing:.1em;text-transform:uppercase;color:var(--link)}
+.kicker::before{content:"";width:12px;height:12px;background:var(--sun);border:2px solid var(--line)}
+h2{font:400 clamp(17px,3vw,26px)/1.5 var(--font-display);text-wrap:balance;overflow-wrap:anywhere}
+h3{font:400 13px/1.6 var(--font-display);overflow-wrap:anywhere}
+.sec-head p{color:var(--muted);font-size:18px}
+.card{background:var(--surface);border:3px solid var(--line);box-shadow:6px 6px 0 var(--shadow);padding:22px;min-width:0}
+.grid{display:grid;gap:26px}
+.cols-3{grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))}
+.cols-2{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.prose{display:grid;gap:16px;max-width:40rem}
+
+/* Problema */
+.problem{display:grid;gap:36px}
+@media (min-width:960px){.problem{grid-template-columns:1fr 1fr;align-items:start}}
+.loop-title{font:400 22px/1.2 var(--font-hud);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
+.loop{display:grid;gap:22px;counter-reset:l}
+.loop li{position:relative;background:var(--surface);border:3px solid var(--line);box-shadow:4px 4px 0 var(--shadow);padding:14px 16px 14px 62px;counter-increment:l;min-width:0}
+.loop li::before{content:counter(l);position:absolute;left:12px;top:12px;width:36px;height:36px;display:grid;place-items:center;background:var(--sun);color:var(--on-sun);border:3px solid var(--line);font:400 14px/1 var(--font-display)}
+.loop li:not(:last-child)::after{content:"▼";position:absolute;left:21px;bottom:-22px;font-size:13px;color:var(--link)}
+.loop strong{display:block;font:400 11px/1.6 var(--font-display);margin-bottom:4px}
+.loop-note{margin-top:16px;font:400 21px/1.3 var(--font-hud);letter-spacing:.04em;color:var(--link)}
+.bases{margin-top:44px}
+.bases .card h3{margin-bottom:10px}
+.munari{display:flex;flex-wrap:wrap;gap:6px 8px;margin-top:12px;font:400 20px/1.2 var(--font-hud)}
+.munari span:not(.arr){border:2px solid var(--line);padding:3px 8px;background:var(--surface-2)}
+.munari .arr{color:var(--link)}
+
+/* Controles */
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:-3px;position:relative;z-index:1}
+.tab{font:400 10px/1.4 var(--font-display);padding:13px 15px;border:3px solid var(--line);border-bottom:0;background:var(--surface-2);color:var(--fg);cursor:pointer}
+.tab:hover{background:var(--surface)}
+.tab[aria-selected="true"]{background:var(--green);color:var(--on-green)}
+.panel{border:3px solid var(--line);background:var(--surface);box-shadow:6px 6px 0 var(--shadow);padding:24px}
+.panel[hidden]{display:none}
+.kinect{display:grid;gap:26px;align-items:center}
+@media (min-width:760px){.kinect{grid-template-columns:230px 1fr}}
+.pstage{background:var(--stage);border:3px solid var(--line);padding:10px;display:grid;place-items:center;justify-self:center;width:100%;max-width:260px}
+.pstage canvas{width:100%;max-width:210px;height:auto}
+.pstage small{font:400 19px/1.2 var(--font-hud);color:#25402F;margin-top:4px;text-align:center}
+.legend{display:grid;gap:14px;margin-top:16px}
+.legend li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.sw{width:22px;height:22px;border:3px solid var(--line);margin-top:3px}
+.sw.sun{background:var(--sun)}.sw.g{background:var(--green)}
+.keyrows{display:grid;gap:18px}
+.keyrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.key{display:inline-block;min-width:2.3em;padding:.2em .65em;border:3px solid var(--line);border-bottom-width:7px;background:var(--surface);font:400 22px/1.1 var(--font-hud);text-align:center;letter-spacing:.05em}
+.steps{display:grid;gap:14px;margin-top:40px;counter-reset:s;max-width:46rem}
+.steps li{display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:start;counter-increment:s}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:44px;height:44px;background:var(--sun);color:var(--on-sun);border:3px solid var(--line);box-shadow:3px 3px 0 var(--shadow);font:400 14px/1 var(--font-display)}
+.steps b{display:block}
+.goal{margin-top:36px;background:var(--sun);color:var(--on-sun);border:3px solid var(--line);box-shadow:6px 6px 0 var(--shadow);padding:20px 22px;display:grid;gap:6px}
+.goal .hud{font-size:23px;text-transform:uppercase;letter-spacing:.1em}
+.goal p{font-size:19px;font-weight:700}
+
+/* Canecas */
+.bin-card{display:grid;gap:16px;align-content:start;padding:0;transition:transform .15s,box-shadow .15s}
+.bin-card:hover{transform:translate(-3px,-3px);box-shadow:9px 9px 0 var(--shadow)}
+.bin-card:hover .main-bin{animation:jig .5s steps(4)}
+@keyframes jig{25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+.sprite-stage{background:var(--stage);border-bottom:3px solid var(--line);display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:18px 12px 8px;min-height:150px}
+.sprite-stage canvas{height:auto}
+.main-bin{width:96px}
+.mini{width:56px;opacity:.95}
+.bin-body{padding:0 22px 22px;display:grid;gap:12px}
+.bin-title{display:flex;align-items:center;gap:10px}
+.bin-title .sw{margin:0}
+.sw.w{background:#FFFFFF}.sw.k{background:#2B2F36}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:400 20px/1 var(--font-hud);letter-spacing:.03em;border:2px solid var(--line);padding:5px 9px;background:var(--surface-2)}
+.more{justify-self:start;font:400 20px/1 var(--font-hud);letter-spacing:.05em;background:none;border:0;border-bottom:3px solid var(--line);padding:4px 0;color:var(--fg);cursor:pointer}
+.more:hover{background:var(--sun);color:var(--on-sun)}
+.tip{border-left:6px solid var(--sun);padding:6px 0 6px 12px;background:var(--surface-2)}
+.tip[hidden]{display:none}
+.note{margin-top:30px;color:var(--muted);max-width:46rem}
+
+/* Técnica */
+.arch{display:grid;gap:34px;counter-reset:a}
+.node{position:relative;background:var(--surface);border:3px solid var(--line);box-shadow:5px 5px 0 var(--shadow);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.node h3{font-size:11px}
+.node:not(:last-child)::after{content:"▼";position:absolute;left:50%;bottom:-30px;transform:translateX(-50%);color:var(--link);font-size:16px}
+@media (min-width:900px){
+  .arch{grid-template-columns:repeat(4,1fr);gap:38px}
+  .node:not(:last-child)::after{content:"▶";left:auto;right:-30px;bottom:auto;top:50%;transform:translateY(-50%)}
+}
+.sub-head{margin:54px 0 14px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 18px}
+.progress{font:400 22px/1 var(--font-hud);letter-spacing:.06em;color:var(--link)}
+.bar{height:16px;border:3px solid var(--line);background:var(--surface);margin-bottom:22px;max-width:46rem}
+.bar i{display:block;height:100%;width:0;background:var(--green);transition:width .25s steps(5)}
+.checks{display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.check{position:relative;display:grid;gap:10px;align-content:start;background:var(--surface);border:3px solid var(--line);box-shadow:5px 5px 0 var(--shadow);padding:18px;cursor:pointer;transition:transform .1s,background .1s;min-width:0}
+.check:hover{transform:translate(-2px,-2px)}
+.check:has(input:checked){background:var(--surface-2)}
+.check input{appearance:none;-webkit-appearance:none;position:absolute;right:14px;top:14px;width:26px;height:26px;border:3px solid var(--line);background:var(--surface);margin:0;cursor:pointer}
+.check input:checked{background:var(--green)}
+.check input:checked::after{content:"✔";display:grid;place-items:center;height:100%;color:var(--on-green);font-size:15px;line-height:1}
+.check input:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.check .n{font:400 20px/1 var(--font-hud);letter-spacing:.08em;color:var(--link)}
+.check h3{padding-right:38px}
+.check p{font-size:16px;color:var(--muted)}
+.check .std{font-size:17px;color:var(--fg)}
+
+/* Simulador */
+.sim{display:grid;gap:30px}
+@media (min-width:980px){.sim{grid-template-columns:minmax(0,480px) minmax(0,1fr);align-items:start}}
+.game{display:grid;gap:16px;min-width:0}
+.game:focus-visible{outline:none}
+.game:focus-visible .screen{outline:3px solid var(--sun);outline-offset:4px}
+.screen{border:3px solid var(--line);box-shadow:8px 8px 0 var(--shadow);background:#BFE6F2;line-height:0}
+.screen canvas{display:block;width:100%;height:auto;touch-action:pan-y;cursor:crosshair}
+.controls{display:grid;gap:12px}
+.binrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.binbtn{display:grid;justify-items:center;gap:2px;padding:8px 4px 10px;background:var(--surface);color:var(--fg);border:3px solid var(--line);box-shadow:3px 3px 0 var(--shadow);cursor:pointer;font:400 9px/1.4 var(--font-display);min-width:0}
+.binbtn canvas{width:44px;height:44px}
+.binbtn .k{font:400 19px/1 var(--font-hud);letter-spacing:.06em;color:var(--muted)}
+.binbtn[aria-pressed="true"]{background:var(--sun);color:var(--on-sun);transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.binbtn[aria-pressed="true"] .k{color:var(--on-sun)}
+.btnrow{display:flex;flex-wrap:wrap;gap:12px}
+.btnrow .btn{flex:1 1 170px}
+.side{display:grid;gap:22px;min-width:0}
+.fb{min-height:5.2em;display:grid;gap:4px;align-content:start}
+.fb .hud{font-size:21px;letter-spacing:.1em;text-transform:uppercase;color:var(--link)}
+.fb.ok{border-left:10px solid var(--green)}
+.fb.bad{border-left:10px solid var(--red)}
+.fb.ok .hud::before{content:"✔ "}
+.fb.bad .hud::before{content:"✘ "}
+.howto li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding-block:6px}
+.howto li+li{border-top:2px dashed var(--line)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.stats div{border:3px solid var(--line);padding:8px 10px;background:var(--surface-2)}
+.stats dt{font:400 19px/1 var(--font-hud);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.stats dd{font:400 16px/1.4 var(--font-display);font-variant-numeric:tabular-nums;margin-top:4px}
+.review{margin-top:14px;display:grid;gap:6px}
+.review li{border-left:6px solid var(--red);padding:2px 0 2px 10px}
+.sim-note{font-size:16px;color:var(--muted)}
+
+/* Impacto */
+.impact{display:grid;gap:26px}
+@media (min-width:900px){.impact{grid-template-columns:1.1fr .9fr}}
+.big{background:var(--green);color:var(--on-green);border:3px solid var(--line);box-shadow:8px 8px 0 var(--shadow);padding:30px;display:grid;gap:14px;align-content:center}
+.big .hud{font-size:23px;letter-spacing:.1em;text-transform:uppercase}
+.big strong{font:400 clamp(20px,3.6vw,34px)/1.4 var(--font-display);text-wrap:balance;overflow-wrap:anywhere}
+.big p{font-size:18px}
+.proj{display:grid;grid-template-columns:72px 1fr;gap:16px;align-items:center}
+.proj .sprite-stage{padding:6px;min-height:0;border:3px solid var(--line)}
+.proj canvas{width:56px}
+.pro-grid{margin-top:34px}
+.foot{padding-block:36px 56px;border-top:3px solid var(--line);background:var(--surface)}
+.foot .wrap{display:grid;gap:12px}
+.foot p{color:var(--muted);font-size:16px}
+
+/* ---------- Movimiento reducido ---------- */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *{transition:none!important}
+  .stage .fall{animation:none;opacity:1;transform:translateY(380%)}
+  .stage .b2{animation:none}
+  .bin-card:hover .main-bin{animation:none}
+}
+</style>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#inicio" aria-label="Justicieros Ecológicos, inicio">
+      <canvas class="spr" data-spr="bin-verde" data-scale="2" width="32" height="32" aria-hidden="true"></canvas>
+      <span>JUSTICIEROS</span>
+    </a>
+    <nav class="nav-links" aria-label="Secciones">
+      <a href="#problema">Problema</a>
+      <a href="#instrucciones">Instrucciones</a>
+      <a href="#canecas">Canecas</a>
+      <a href="#instalacion">Instalación</a>
+      <a href="#simulador">Simulador</a>
+      <a href="#impacto">Impacto</a>
+    </nav>
+    <button class="theme-btn" id="theme" type="button" aria-label="Cambiar tema claro u oscuro">Modo oscuro</button>
+  </div>
+</header>
+
+<main id="inicio">
+  <!-- 1. HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-text">
+        <p class="eyebrow">Escuela Tecnológica Instituto Técnico Central</p>
+        <h1>Justicieros Ecológicos <span class="sub">Manual &amp; Guía de Uso</span></h1>
+        <p class="lead">Instalación interactiva de reciclaje gamificado para el ETITC</p>
+        <div class="credits">
+          <span class="tag">Creado por Maria Fernanda Ardila y Samuel Buitrago Pinzón</span>
+          <span class="tag">ETITC</span>
+        </div>
+        <div class="cta-grid">
+          <a class="btn" href="#instrucciones">Instrucciones de Juego</a>
+          <a class="btn" href="#instalacion">Guía de Instalación / Calibración</a>
+          <a class="btn" href="#canecas">Código de Canecas</a>
+          <a class="btn sun" href="#simulador">Simulador Interactivo</a>
+        </div>
+      </div>
+      <div class="stage" aria-hidden="true">
+        <canvas class="bg" id="hero-bg" width="240" height="240"></canvas>
+        <canvas class="spr fall f1" data-spr="bottle" data-scale="8" width="128" height="128"></canvas>
+        <canvas class="spr fall f2" data-spr="banana" data-scale="8" width="128" height="128"></canvas>
+        <canvas class="spr fall f3" data-spr="napkin" data-scale="8" width="128" height="128"></canvas>
+        <canvas class="spr bin b1" data-spr="bin-blanca" data-scale="8" width="128" height="128"></canvas>
+        <canvas class="spr bin b2" data-spr="bin-verde" data-scale="8" width="128" height="128"></canvas>
+        <canvas class="spr bin b3" data-spr="bin-negra" data-scale="8" width="128" height="128"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. PROBLEMA Y PROPÓSITO -->
+  <section class="sec band" id="problema">
+    <div class="wrap">
+      <div class="problem">
+        <div>
+          <div class="sec-head">
+            <span class="kicker">Problema y propósito</span>
+            <h2>Nadie clasifica bien lo que no practica</h2>
+          </div>
+          <div class="prose">
+            <p>En el ETITC existe una falta de cultura de reciclaje. En el día a día, los estudiantes no clasifican correctamente los residuos y todo termina mezclado en la caneca más cercana.</p>
+            <p>Justicieros Ecológicos responde con una instalación física y gamificada. Un sensor Kinect lee tus movimientos y convierte tu cuerpo en el controlador del juego. Clasificar deja de ser una norma pegada en la pared y pasa a ser algo que haces con las manos, rápido y bajo presión de tiempo.</p>
+            <p>El diseño se apoya en el "Deseo de Orden" de Reiss y en el perfil filántropo: al jugador le gusta poner cada cosa en su lugar y sentir que ayuda. El temporizador agrega la urgencia que mantiene la atención.</p>
+          </div>
+        </div>
+        <div>
+          <p class="loop-title">Ciclo de juego</p>
+          <ol class="loop">
+            <li><strong>Percepción</strong>Ves caer el residuo y reconoces qué es.</li>
+            <li><strong>Decisión</strong>Eliges a qué caneca pertenece.</li>
+            <li><strong>Acción</strong>Mueves tu cuerpo para atraparlo y llevarlo a su caneca.</li>
+            <li><strong>Feedback</strong>El juego te dice si acertaste, y la ronda continúa.</li>
+          </ol>
+          <p class="loop-note">↺ Y vuelta a empezar, con el tiempo corriendo.</p>
+        </div>
+      </div>
+
+      <div class="grid cols-3 bases">
+        <article class="card">
+          <h3>Método de Bruno Munari</h3>
+          <p>El proyecto se diseñó en cuatro etapas.</p>
+          <div class="munari"><span>Definición</span><span class="arr">▶</span><span>Componentes</span><span class="arr">▶</span><span>Creatividad</span><span class="arr">▶</span><span>Modelo / Prototipo</span></div>
+        </article>
+        <article class="card">
+          <h3>Estética pixel art</h3>
+          <p>Inspirada en "TO PIXELIA", con paisajes e iconos emblemáticos de Colombia: montañas andinas y la palma de cera.</p>
+        </article>
+        <article class="card">
+          <h3>Motivación del jugador</h3>
+          <p>Deseo de Orden de Reiss, perfil filántropo y un temporizador que genera urgencia en cada ronda.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. CONTROLES E INSTRUCCIONES -->
+  <section class="sec" id="instrucciones">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Instrucciones de juego</span>
+        <h2>Tu cuerpo es el control</h2>
+        <p>El juego tiene dos modos de control. El modo Kinect es el principal, y el de teclado y ratón sirve como alternativa.</p>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Modos de control">
+        <button class="tab" role="tab" id="tab-k" aria-selected="true" aria-controls="pan-k" type="button">Modo Kinect</button>
+        <button class="tab" role="tab" id="tab-t" aria-selected="false" aria-controls="pan-t" tabindex="-1" type="button">Teclado / Ratón</button>
+      </div>
+      <div class="panel" role="tabpanel" id="pan-k" aria-labelledby="tab-k">
+        <div class="kinect">
+          <div class="pstage">
+            <canvas id="person" width="196" height="224" aria-label="Figura de un jugador con la mano izquierda arriba y la derecha extendida" role="img"></canvas>
+            <small>Vista espejo, como te ves en pantalla</small>
+          </div>
+          <div>
+            <h3>Modo Kinect (principal)</h3>
+            <p style="margin-top:10px">El sensor detecta tus articulaciones en tiempo real. No necesitas mando ni teclado.</p>
+            <ul class="legend">
+              <li><span class="sw sun" aria-hidden="true"></span><div><b>Mano derecha.</b> Mueve el personaje o la caneca en pantalla.</div></li>
+              <li><span class="sw g" aria-hidden="true"></span><div><b>Mano izquierda arriba.</b> Agarra o atrapa los residuos, como las cáscaras de banana, en el aire antes de que caigan.</div></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="panel" role="tabpanel" id="pan-t" aria-labelledby="tab-t" hidden>
+        <h3>Modo teclado / ratón (alternativo)</h3>
+        <p style="margin:10px 0 20px">Para jugar sin sensor o practicar antes de pasar al Kinect.</p>
+        <div class="keyrows">
+          <div class="keyrow"><span class="key">K</span><span>Cambia el modo de control.</span></div>
+          <div class="keyrow"><span class="key">ESPACIO</span><span class="key">ENTER</span><span class="key">CLIC</span><span>Inicia la partida.</span></div>
+        </div>
+        <p style="margin-top:20px" class="sim-note">Puedes probar este modo ahora mismo en el <a href="#simulador">simulador</a>.</p>
+      </div>
+
+      <ol class="steps" aria-label="Paso a paso">
+        <li><div><b>Elige tu modo de control.</b>Kinect es el modo principal. Presiona K para pasar a teclado o ratón.</div></li>
+        <li><div><b>Inicia la partida.</b>Presiona ESPACIO, ENTER o haz clic.</div></li>
+        <li><div><b>Mira qué cae.</b>Identifica el residuo antes de que llegue al suelo.</div></li>
+        <li><div><b>Atrápalo y clasifícalo.</b>Sube la mano izquierda para agarrarlo y usa la mano derecha para mover la caneca correcta.</div></li>
+        <li><div><b>No pierdas de vista el reloj.</b>Cada ronda termina cuando se agota el temporizador.</div></li>
+      </ol>
+
+      <div class="goal">
+        <span class="hud">Objetivo del juego</span>
+        <p>Atrapar los residuos en el aire y clasificarlos rápidamente antes de que se agote el tiempo del temporizador.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. CÓDIGO DE CANECAS -->
+  <section class="sec band" id="canecas">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Código de canecas</span>
+        <h2>Tres canecas, tres reglas</h2>
+        <p>Estas son las canecas que usa el juego, con el código de colores de Colombia.</p>
+      </div>
+      <div class="grid cols-3">
+        <article class="card bin-card">
+          <div class="sprite-stage" aria-hidden="true">
+            <canvas class="spr mini" data-spr="bottle" data-scale="4" width="64" height="64"></canvas>
+            <canvas class="spr main-bin" data-spr="bin-blanca" data-scale="6" width="96" height="96"></canvas>
+            <canvas class="spr mini" data-spr="can" data-scale="4" width="64" height="64"></canvas>
+          </div>
+          <div class="bin-body">
+            <div class="bin-title"><span class="sw w" aria-hidden="true"></span><h3>Caneca blanca</h3></div>
+            <p><b>Residuos reciclables aprovechables.</b></p>
+            <div class="chips"><span class="chip">Plástico</span><span class="chip">Vidrio</span><span class="chip">Papel</span><span class="chip">Cartón</span><span class="chip">Metales</span></div>
+            <button class="more" type="button" aria-expanded="false" aria-controls="tip-w">Para recordar</button>
+            <p class="tip" id="tip-w" hidden>Los envases limpios y secos se aprovechan mejor.</p>
+          </div>
+        </article>
+        <article class="card bin-card">
+          <div class="sprite-stage" aria-hidden="true">
+            <canvas class="spr mini" data-spr="banana" data-scale="4" width="64" height="64"></canvas>
+            <canvas class="spr main-bin" data-spr="bin-verde" data-scale="6" width="96" height="96"></canvas>
+            <canvas class="spr mini" data-spr="apple" data-scale="4" width="64" height="64"></canvas>
+          </div>
+          <div class="bin-body">
+            <div class="bin-title"><span class="sw g" aria-hidden="true"></span><h3>Caneca verde</h3></div>
+            <p><b>Residuos orgánicos reciclables.</b></p>
+            <div class="chips"><span class="chip">Restos de comida</span><span class="chip">Cáscaras de banana</span><span class="chip">Desechos agrícolas</span></div>
+            <button class="more" type="button" aria-expanded="false" aria-controls="tip-g">Para recordar</button>
+            <p class="tip" id="tip-g" hidden>Si lo orgánico se mezcla con otros residuos, deja de aprovecharse.</p>
+          </div>
+        </article>
+        <article class="card bin-card">
+          <div class="sprite-stage" aria-hidden="true">
+            <canvas class="spr mini" data-spr="napkin" data-scale="4" width="64" height="64"></canvas>
+            <canvas class="spr main-bin" data-spr="bin-negra" data-scale="6" width="96" height="96"></canvas>
+            <canvas class="spr mini" data-spr="chips" data-scale="4" width="64" height="64"></canvas>
+          </div>
+          <div class="bin-body">
+            <div class="bin-title"><span class="sw k" aria-hidden="true"></span><h3>Caneca negra</h3></div>
+            <p><b>Residuos no aprovechables.</b></p>
+            <div class="chips"><span class="chip">Papel higiénico</span><span class="chip">Servilletas sucias</span><span class="chip">Papeles metalizados</span></div>
+            <button class="more" type="button" aria-expanded="false" aria-controls="tip-n">Para recordar</button>
+            <p class="tip" id="tip-n" hidden>Lo sucio o mezclado con comida normalmente no se aprovecha.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. GUÍA TÉCNICA -->
+  <section class="sec" id="instalacion">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Guía técnica e instalación</span>
+        <h2>Cómo funciona por dentro</h2>
+        <p>Tres piezas trabajan juntas: el sensor ve tu cuerpo, una librería ubica tus articulaciones y Processing dibuja el juego.</p>
+      </div>
+      <div class="arch" aria-label="Arquitectura técnica">
+        <div class="node"><h3>Sensor Kinect</h3><p>Captura tu movimiento en tiempo real.</p></div>
+        <div class="node"><h3>Librerías de captura</h3><p>Detectan las articulaciones: manos, brazos y cuerpo.</p></div>
+        <div class="node"><h3>Processing</h3><p>Núcleo gráfico. Ejecuta el Game Loop y dibuja el pixel art.</p></div>
+        <div class="node"><h3>Pantalla del juego</h3><p>Muestra los residuos, las canecas y el temporizador.</p></div>
+      </div>
+
+      <div class="sub-head">
+        <h3>Proceso de ajuste y prueba</h3>
+        <span class="progress" id="prog" aria-live="polite">0 de 4 listos</span>
+      </div>
+      <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+      <div class="checks">
+        <label class="check" for="c1">
+          <span class="n">Paso 1</span>
+          <h3>Calibración</h3>
+          <p class="std">Ajuste fino del sensor Kinect en el espacio físico.</p>
+          <p>Mueve el sensor hasta que vea tu cuerpo completo y las dos manos.</p>
+          <input type="checkbox" id="c1" data-k="1" aria-label="Calibración lista">
+        </label>
+        <label class="check" for="c2">
+          <span class="n">Paso 2</span>
+          <h3>Validación</h3>
+          <p class="std">Comprobación precisa del reconocimiento de gestos.</p>
+          <p>Verifica que la mano derecha mueva la caneca y que la izquierda arriba atrape.</p>
+          <input type="checkbox" id="c2" data-k="2" aria-label="Validación lista">
+        </label>
+        <label class="check" for="c3">
+          <span class="n">Paso 3</span>
+          <h3>Pruebas</h3>
+          <p class="std">Ensayos en campo real en las instalaciones del ETITC.</p>
+          <p>Prueba con estudiantes, en el lugar donde quedará la instalación.</p>
+          <input type="checkbox" id="c3" data-k="3" aria-label="Pruebas listas">
+        </label>
+        <label class="check" for="c4">
+          <span class="n">Paso 4</span>
+          <h3>Prototipo final</h3>
+          <p class="std">Ejecución del Game Loop en tiempo real sin latencia.</p>
+          <p>Confirma que la caneca responde al instante a tus movimientos.</p>
+          <input type="checkbox" id="c4" data-k="4" aria-label="Prototipo final listo">
+        </label>
+      </div>
+      <p class="note">Marca cada paso a medida que lo completes. Tu avance se guarda en este navegador.</p>
+    </div>
+  </section>
+
+  <!-- 6. SIMULADOR -->
+  <section class="sec band" id="simulador">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Simulador interactivo</span>
+        <h2>Pon a prueba tu criterio</h2>
+        <p>Mueve la caneca y elige su tipo para atrapar cada residuo en la caneca correcta. Tienes 60 segundos.</p>
+      </div>
+      <div class="sim">
+        <div class="game" id="game" tabindex="0" aria-label="Simulador de reciclaje. Presiona espacio, enter o haz clic para iniciar.">
+          <div class="screen"><canvas id="gcv" width="240" height="320" aria-label="Pantalla del simulador" role="img"></canvas></div>
+          <div class="controls">
+            <div class="binrow" role="group" aria-label="Tipo de caneca">
+              <button class="binbtn" type="button" data-bin="0" aria-pressed="false"><canvas class="spr" data-spr="bin-blanca" data-scale="3" width="48" height="48" aria-hidden="true"></canvas>Blanca<span class="k">tecla 1</span></button>
+              <button class="binbtn" type="button" data-bin="1" aria-pressed="true"><canvas class="spr" data-spr="bin-verde" data-scale="3" width="48" height="48" aria-hidden="true"></canvas>Verde<span class="k">tecla 2</span></button>
+              <button class="binbtn" type="button" data-bin="2" aria-pressed="false"><canvas class="spr" data-spr="bin-negra" data-scale="3" width="48" height="48" aria-hidden="true"></canvas>Negra<span class="k">tecla 3</span></button>
+            </div>
+            <div class="btnrow">
+              <button class="btn sun small" type="button" id="start">Iniciar partida</button>
+              <button class="btn small" type="button" id="mode">Control: Ratón / táctil (K)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="side">
+          <div class="card">
+            <h3>Cómo se juega</h3>
+            <ul class="howto" style="margin-top:12px">
+              <li><span class="key">ESPACIO</span><span class="key">ENTER</span><span class="key">CLIC</span><span>Inicia la partida</span></li>
+              <li><span class="key">Ratón</span><span>o dedo: arrastra para mover la caneca</span></li>
+              <li><span class="key">1</span><span class="key">2</span><span class="key">3</span><span>Cambia entre blanca, verde y negra</span></li>
+              <li><span class="key">K</span><span>Alterna ratón y teclado (flechas ← →)</span></li>
+            </ul>
+            <p class="sim-note" style="margin-top:12px">Un error resta 3 segundos. En la instalación real, la mano izquierda arriba agarra el residuo; aquí la caneca lo atrapa al tocarlo.</p>
+          </div>
+          <div class="card fb" id="fb" aria-live="off">
+            <span class="hud">Retroalimentación</span>
+            <p>Atrapa un residuo con la caneca correcta y aquí verás por qué va ahí.</p>
+          </div>
+          <div class="card" id="res" aria-live="polite">
+            <h3>Tu resumen</h3>
+            <p class="sim-note" style="margin-top:10px">Al terminar la ronda verás tu puntaje y los residuos que conviene repasar.</p>
+            <dl class="stats"><div><dt>Mejor puntaje</dt><dd id="best">0</dd></div><div><dt>Control</dt><dd id="mode-lbl" style="font-size:11px">Ratón</dd></div></dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. IMPACTO -->
+  <section class="sec" id="impacto">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Impacto y proyecciones</span>
+        <h2>De un juego en el campus a un hábito</h2>
+      </div>
+      <div class="impact">
+        <div class="big">
+          <span class="hud">Impacto esperado</span>
+          <strong>Cero residuos falsos en la institución</strong>
+          <p>Que cada residuo termine en la caneca que le corresponde, y que el ETITC sea pionero en tecnología sostenible.</p>
+        </div>
+        <div class="card">
+          <h3>Qué cambia</h3>
+          <ul style="display:grid;gap:12px;margin-top:14px">
+            <li>Reciclar se vuelve una experiencia corporal y activa.</li>
+            <li>La clasificación se practica en el mismo lugar donde se generan los residuos.</li>
+            <li>La tecnología se pone al servicio de la cultura ambiental del campus.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 style="margin:48px 0 20px">Proyecciones futuras</h3>
+      <div class="grid cols-3 pro-grid" style="margin-top:0">
+        <article class="card proj">
+          <div class="sprite-stage" aria-hidden="true"><canvas class="spr" data-spr="bin-verde" data-scale="4" width="64" height="64"></canvas></div>
+          <div><h3 style="font-size:11px;margin-bottom:6px">Instalación permanente</h3><p>En zonas comunes del ETITC.</p></div>
+        </article>
+        <article class="card proj">
+          <div class="sprite-stage" aria-hidden="true"><canvas class="spr" data-spr="pin" data-scale="4" width="64" height="64"></canvas></div>
+          <div><h3 style="font-size:11px;margin-bottom:6px">Más escuelas</h3><p>Escalar el proyecto a más escuelas de Colombia.</p></div>
+        </article>
+        <article class="card proj">
+          <div class="sprite-stage" aria-hidden="true"><canvas class="spr" data-spr="bat" data-scale="4" width="64" height="64"></canvas></div>
+          <div><h3 style="font-size:11px;margin-bottom:6px">Residuos RAEE</h3><p>Incluir residuos de aparatos eléctricos y electrónicos.</p></div>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <h3>Justicieros Ecológicos</h3>
+    <p>Creado por Maria Fernanda Ardila y Samuel Buitrago Pinzón. Escuela Tecnológica Instituto Técnico Central (ETITC).</p>
+    <p>Desarrollado con Processing y sensor Kinect.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null}}
+
+/* ---------- Sprites ---------- */
+var P={'.':null,k:'#10241A',w:'#F5F5F0',W:'#FFFFFF',g:'#B8C4BC',G:'#3DBA5C',D:'#1F7A3A',y:'#F4C20D',Y:'#C99A00',r:'#D94A3B',u:'#5DB1E0',U:'#2E78AE',n:'#8A5A33',N:'#C99A63',s:'#EDB98F',b:'#2B2F36',c:'#1B1E23'};
+function ext(o){var r={},k;for(k in P)r[k]=P[k];for(k in o)r[k]=o[k];return r}
+var BIN=[
+'................',
+'......kkkk......',
+'...kkkkkkkkkk...',
+'..kLLLLLLLLLLk..',
+'..kkkkkkkkkkkk..',
+'...kMMMMMMMMk...',
+'...kMSMMMMSMk...',
+'...kMSMMMMSMk...',
+'...kMSMMMMSMk...',
+'...kMSMMMMSMk...',
+'...kMSMMMMSMk...',
+'...kMSMMMMSMk...',
+'...kMSMMMMSMk...',
+'...kMMMMMMMMk...',
+'....kkkkkkkk....',
+'................'];
+var SPR={
+ 'bin-blanca':{rows:BIN,pal:ext({L:'#FFFFFF',M:'#F5F5F0',S:'#C4CEC8'})},
+ 'bin-verde':{rows:BIN,pal:ext({L:'#4CCB6C',M:'#2E9F4F',S:'#1D7A39'})},
+ 'bin-negra':{rows:BIN,pal:ext({L:'#5A616C',M:'#2F343C',S:'#1C1F25'})},
+ banana:{rows:[
+'................','............kk..','...........kyyk.','..........kyyyk.','.........kyyyYk.','........kyyyyYk.','..k.....kyyyYk..','.kyk...kyyyyYk..','.kyyk.kyyyyYk...','..kyykyyyyYYk...','...kyyyyyYYk....','....kyyYYYk.....','.....kkkkk......','................','................','................'],pal:P},
+ apple:{rows:[
+'................','.......nn.......','......nk........','....kkrrkk......','...krrrrrrk.....','...krrwwrrk.....','....kwwwwk......','....kwnwwk......','....kwwwwk......','...krrwwrrk.....','...krrrrrrk.....','....kkrrkk......','......kk........','................','................','................'],pal:P},
+ bottle:{rows:[
+'................','......kkkk......','......krrk......','......kkkk......','.....kuuuuk.....','....kuwuuuuk....','....kuwuuuuk....','....kkkkkkkk....','....kwwwwwwk....','....kwwwwwwk....','....kkkkkkkk....','....kuwuuuuk....','....kuwuuuUk....','....kUUUUUUk....','....kkkkkkkk....','................'],pal:P},
+ box:{rows:[
+'................','..kkkkkkkkkkkk..','.kNNNNNkkNNNNNk.','.kNNNNNkkNNNNNk.','.kkkkkkkkkkkkkk.','.knnnnnnnnnnnnk.','.knnnnnnnnnnnnk.','.knnnnkkkknnnnk.','.knnnnkwwkknnnk.','.knnnnnnnnnnnnk.','.knnnnnnnnnnnnk.','.kkkkkkkkkkkkkk.','................','................','................','................'],pal:P},
+ can:{rows:[
+'................','....kkkkkkkk....','...kggggggggk...','....kkkkkkkk....','....krrrrrrk....','....krwwwwrk....','....krrrrrrk....','....krwwwwrk....','....krrrrrrk....','....kggggggk....','....kkkkkkkk....','................','................','................','................','................'],pal:P},
+ napkin:{rows:[
+'................','................','...kkkkkkkkk....','..kwwwwgwwwwk...','..kwwnnwwwwwk...','..kwnnnwwgwwk...','..kwwnwwwwwwk...','..kgwwwwnnwwk...','..kwwwwwnnnwk...','..kwgwwwwnwwk...','..kwwwwgwwwwk...','...kkkkkkkkk....','................','................','................','................'],pal:P},
+ tp:{rows:[
+'................','....kkkkkkkk....','...kwwwwwwwwk...','..kwwgwwwwwwwk..','..kwkkkwwwwwwk..','..kwkgkwwgwwwk..','..kwkkkwwwwwwk..','..kwwwwwwwwwwk..','...kkkkkkkkkk...','................','................','................','................','................','................','................'],pal:P},
+ chips:{rows:[
+'................','..kkkkkkkkkkkk..','..kgkgkgkgkgkk..','..kkkkkkkkkkkk..','..kyyyyyyyyyyk..','..kyrrrrrrrryk..','..kyrwwwwwwryk..','..kyrrrrrrrryk..','..kyyyyyyyyyyk..','..kkkkkkkkkkkk..','..kgkgkgkgkgkk..','..kkkkkkkkkkkk..','................','................','................','................'],pal:P},
+ pin:{rows:[
+'................','................','....kkkkkkkk....','...krrrrrrrrk...','...krrrwwrrrk...','...krrwwwwrrk...','...krrwwwwrrk...','...krrrwwrrrk...','....krrrrrrk....','.....krrrrk.....','......krrk......','.......kk.......','................','................','................','................'],pal:P},
+ bat:{rows:[
+'................','......kkkk......','......kggk......','....kkkkkkkk....','....kyyyyyyk....','....kyyyyyyk....','....kkkkkkkk....','....kbbbbbbk....','....kbwbbwbk....','....kbbbbbbk....','....kbbbbbbk....','....kbbbbbbk....','....kbbbbbbk....','....kkkkkkkk....','................','................'],pal:P}
+};
+function paint(ctx,rows,pal,sc){
+  for(var j=0;j<rows.length;j++){var r=rows[j];for(var i=0;i<16&&i<r.length;i++){var col=pal[r[i]];if(col){ctx.fillStyle=col;ctx.fillRect(i*sc,j*sc,sc,sc);}}}
+}
+function sprCanvas(name,sc){var d=SPR[name],c=document.createElement('canvas');c.width=c.height=16*sc;paint(c.getContext('2d'),d.rows,d.pal,sc);return c}
+$$('canvas[data-spr]').forEach(function(c){
+  var d=SPR[c.getAttribute('data-spr')];if(!d)return;
+  var sc=+c.getAttribute('data-scale')||4;c.width=c.height=16*sc;
+  paint(c.getContext('2d'),d.rows,d.pal,sc);
+});
+
+/* ---------- Escena (hero y simulador) ---------- */
+function drawScene(x,W,H){
+  var bands=['#BFE6F2','#CDEBF3','#DAF1F2','#E6F5EE','#F0F8E8','#F7FADD'];
+  var hz=Math.round(H*0.66/4)*4, bh=Math.ceil(hz/bands.length);
+  bands.forEach(function(c,i){x.fillStyle=c;x.fillRect(0,i*bh,W,bh)});
+  var cx=Math.round(W*0.74),cy=Math.round(H*0.13),R=Math.round(W*0.055)*1;
+  x.fillStyle='#F4C20D';
+  for(var dy=-R;dy<R;dy+=3){var hw=Math.floor(Math.sqrt(R*R-dy*dy)/3)*3;x.fillRect(cx-hw,cy+dy,hw*2,3);}
+  var k=H/320;
+  function mtn(col,base,amp,f,p){x.fillStyle=col;for(var i=0;i<W;i+=4){var h=Math.round(base+Math.round((Math.sin(i*f+p)*amp+Math.sin(i*f*2.3+p*1.7)*amp*.4)/4)*4);x.fillRect(i,hz-h,4,h+1);}}
+  mtn('#9ACFB0',70*k,26*k,.021,1.2);
+  mtn('#5DAE78',40*k,18*k,.033,3.4);
+  x.fillStyle='#3E8E57';x.fillRect(0,hz,W,H-hz);
+  x.fillStyle='#6CC27F';x.fillRect(0,hz,W,4);
+  x.fillStyle='#2F7A47';
+  for(var yy=hz+14;yy<H;yy+=18){for(var xx=((yy/18)%2)*10;xx<W;xx+=24){x.fillRect(xx,yy,8,3);}}
+  function palm(px,h){x.fillStyle='#8B6B3E';x.fillRect(px,hz-h,4,h);x.fillStyle='#A8864F';x.fillRect(px,hz-h,2,h);x.fillStyle='#1F7A3A';var t=hz-h;[[-14,-2,14,4],[4,-2,14,4],[-10,-6,8,4],[6,-6,8,4],[-4,-10,12,4],[-18,2,8,4],[10,2,8,4]].forEach(function(a){x.fillRect(px+a[0],t+a[1],a[2],a[3])});}
+  palm(Math.round(W*0.1),Math.round(H*0.2));
+  palm(Math.round(W*0.9),Math.round(H*0.16));
+}
+var hb=$('#hero-bg');if(hb){drawScene(hb.getContext('2d'),240,240)}
+
+/* ---------- Tema ---------- */
+var root=document.documentElement,tbtn=$('#theme');
+function isDark(){var a=root.getAttribute('data-theme');if(a)return a==='dark';return window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches}
+function themeLabel(){tbtn.textContent=isDark()?'Modo claro':'Modo oscuro'}
+tbtn.addEventListener('click',function(){root.setAttribute('data-theme',isDark()?'light':'dark');themeLabel()});
+themeLabel();
+
+/* ---------- Pestañas ---------- */
+var tabs=$$('.tab');
+function selTab(t){tabs.forEach(function(b){var on=b===t;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;$('#'+b.getAttribute('aria-controls')).hidden=!on});t.focus()}
+tabs.forEach(function(t,i){
+  t.addEventListener('click',function(){selTab(t)});
+  t.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight')selTab(tabs[(i+1)%tabs.length]);
+    else if(e.key==='ArrowLeft')selTab(tabs[(i-1+tabs.length)%tabs.length]);
+  });
+});
+
+/* ---------- Tarjetas de canecas ---------- */
+$$('.more').forEach(function(b){b.addEventListener('click',function(){
+  var t=document.getElementById(b.getAttribute('aria-controls')),open=b.getAttribute('aria-expanded')==='true';
+  b.setAttribute('aria-expanded',!open);t.hidden=open;
+})});
+
+/* ---------- Lista de verificación ---------- */
+var chk=$$('.check input'),bar=$('#bar'),prog=$('#prog');
+var saved={};try{saved=JSON.parse(store('je-check')||'{}')||{}}catch(e){saved={}}
+function updProg(){var n=chk.filter(function(c){return c.checked}).length;bar.style.width=(n/chk.length*100)+'%';prog.textContent=n+' de '+chk.length+' listos'}
+chk.forEach(function(c){c.checked=!!saved[c.dataset.k];c.addEventListener('change',function(){saved[c.dataset.k]=c.checked;store('je-check',JSON.stringify(saved));updProg()})});
+updProg();
+
+/* ---------- Figura Kinect ---------- */
+var pc=$('#person');
+function drawPerson(t){
+  var x=pc.getContext('2d'),s=7,OY=2;x.clearRect(0,0,pc.width,pc.height);
+  var dx=Math.round(Math.sin(t*2.2)*1.2),lift=Math.round((Math.sin(t*3)+1));
+  var skin='#EDB98F',tee='#2E9F4F',jeans='#2E78AE',sun='#F4C20D',hair='#3B2A1E';
+  var parts=[
+   [9,7,7,9,tee],[9,16,3,9,jeans],[13,16,3,9,jeans],[8,25,4,2,hair],[13,25,4,2,hair],
+   [10,1,5,5,skin],[10,1,5,2,hair],
+   [8,8,2,2,tee],[7,6,2,2,skin],[6,4,2,2,skin],[4,2-lift+0,3,3,sun],
+   [16,8,3,2,tee],[19,8,3+dx,2,skin],[22+dx,7,3,4,sun]
+  ];
+  x.fillStyle='#10241A';
+  parts.forEach(function(p){x.fillRect((p[0]-1)*s,(p[1]+OY-1)*s,(p[2]+2)*s,(p[3]+2)*s)});
+  parts.forEach(function(p){x.fillStyle=p[4];x.fillRect(p[0]*s,(p[1]+OY)*s,p[2]*s,p[3]*s)});
+  x.fillStyle='#10241A';x.fillRect(11*s,(3+OY)*s,s,s);x.fillRect(13*s,(3+OY)*s,s,s);
+}
+if(pc){
+  drawPerson(.9);
+  if(!reduce&&'IntersectionObserver' in window){
+    var pv=false;new IntersectionObserver(function(es){pv=es[0].isIntersecting}).observe(pc);
+    (function loop(ts){if(pv&&!pc.closest('[hidden]'))drawPerson(ts/1000);requestAnimationFrame(loop)})(0);
+  }
+}
+
+/* ---------- Simulador ---------- */
+var G=$('#game'),cv=$('#gcv'),ctx=cv.getContext('2d'),W=240,H=320;
+ctx.imageSmoothingEnabled=false;
+var bg=document.createElement('canvas');bg.width=W;bg.height=H;drawScene(bg.getContext('2d'),W,H);
+var BINNAME=['Blanca','Verde','Negra'];
+var binSpr=['blanca','verde','negra'].map(function(n){return sprCanvas('bin-'+n,3)});
+var ITEMS=[
+ {id:'banana',name:'Cáscara de banana',bin:1,why:'Es un resto de comida: orgánico.'},
+ {id:'apple',name:'Corazón de manzana',bin:1,why:'Es un resto de comida: orgánico.'},
+ {id:'bottle',name:'Botella de plástico',bin:0,why:'Plástico: reciclable aprovechable.'},
+ {id:'box',name:'Caja de cartón',bin:0,why:'Cartón: reciclable aprovechable.'},
+ {id:'can',name:'Lata de gaseosa',bin:0,why:'Metal: reciclable aprovechable.'},
+ {id:'napkin',name:'Servilleta sucia',bin:2,why:'Sucia, no se aprovecha.'},
+ {id:'tp',name:'Papel higiénico usado',bin:2,why:'No es aprovechable.'},
+ {id:'chips',name:'Empaque metalizado',bin:2,why:'Papel metalizado: no aprovechable.'}
+];
+ITEMS.forEach(function(it){it.cv=sprCanvas(it.id,2)});
+var DUR=60,state='idle',mode='raton',binType=1,binX=W/2,keys={l:0,r:0},lastItem=-1,blink=0;
+var S={};
+var best=+store('je-best')||0;$('#best').textContent=best;
+var fb=$('#fb'),res=$('#res');
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function setBin(i){binType=i;$$('.binbtn').forEach(function(b){b.setAttribute('aria-pressed',+b.dataset.bin===i)})}
+function setMode(m){mode=m;$('#mode').textContent=m==='raton'?'Control: Ratón / táctil (K)':'Control: Teclado ← → (K)';$('#mode-lbl').textContent=m==='raton'?'Ratón':'Teclado'}
+function say(ok,title,msg){fb.className='card fb '+(ok?'ok':'bad');fb.innerHTML='<span class="hud"></span><p></p>';fb.firstChild.textContent=title;fb.lastChild.textContent=msg}
+function reset(){S={time:DUR,score:0,streak:0,right:0,wrong:0,missed:0,items:[],spawn:.4,el:0,parts:[],pops:[],shake:0,flash:0,mist:[]}}
+reset();
+function start(){reset();state='playing';binX=W/2;fb.className='card fb';fb.innerHTML='<span class="hud">Retroalimentación</span><p>¡Ya! Elige la caneca y atrapa lo que cae.</p>'}
+function spawn(){
+  var i;do{i=Math.floor(Math.random()*ITEMS.length)}while(i===lastItem);lastItem=i;
+  var sp=55+Math.min(S.el*1.1,60);
+  S.items.push({d:ITEMS[i],x:6+Math.random()*(W-44),y:-34,v:sp*(.85+Math.random()*.3)});
+}
+function burst(x,y,col){for(var i=0;i<10;i++)S.parts.push({x:x,y:y,vx:(Math.random()-.5)*120,vy:-30-Math.random()*90,l:.6,c:col})}
+function pop(t,x,y,c){S.pops.push({t:t,x:x,y:y,l:.9,c:c})}
+function end(){
+  state='over';
+  var tot=S.right+S.wrong+S.missed,acc=tot?Math.round(S.right/tot*100):0,nb=false;
+  if(S.score>best){best=S.score;store('je-best',String(best));nb=true}
+  var seen={},rev=S.mist.filter(function(m){if(seen[m.n])return false;seen[m.n]=1;return true}).slice(0,5);
+  res.innerHTML='<h3>Tu resumen</h3>'+
+   '<dl class="stats"><div><dt>Puntaje</dt><dd>'+S.score+'</dd></div><div><dt>Mejor</dt><dd>'+best+(nb?' ★':'')+'</dd></div>'+
+   '<div><dt>Aciertos</dt><dd>'+S.right+'</dd></div><div><dt>Precisión</dt><dd>'+acc+'%</dd></div>'+
+   '<div><dt>Errores</dt><dd>'+S.wrong+'</dd></div><div><dt>Se cayeron</dt><dd>'+S.missed+'</dd></div></dl>'+
+   (rev.length?'<p class="hud" style="font-size:21px;letter-spacing:.08em;text-transform:uppercase;margin-top:16px;color:var(--link)">Para repasar</p><ul class="review">'+rev.map(function(m){return '<li><b>'+m.n+'</b> va en la caneca '+m.b+'.</li>'}).join('')+'</ul>':'<p class="sim-note" style="margin-top:14px">Sin errores de clasificación. Buen criterio.</p>');
+  $('#best').textContent=best;
+}
+function update(dt){
+  if(S.shake>0)S.shake-=dt;if(S.flash>0)S.flash-=dt;
+  S.parts.forEach(function(p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=260*dt;p.l-=dt});S.parts=S.parts.filter(function(p){return p.l>0});
+  S.pops.forEach(function(p){p.y-=26*dt;p.l-=dt});S.pops=S.pops.filter(function(p){return p.l>0});
+  if(state!=='playing')return;
+  S.el+=dt;S.time-=dt;
+  if(S.time<=0){S.time=0;end();return}
+  if(mode==='teclado')binX+=(keys.r-keys.l)*170*dt;
+  binX=clamp(binX,26,W-26);
+  S.spawn-=dt;if(S.spawn<=0){spawn();S.spawn=Math.max(.55,1.25-S.el*.012)}
+  var top=H-54+3;
+  for(var i=S.items.length-1;i>=0;i--){
+    var it=S.items[i];it.y+=it.v*dt;
+    var cx=it.x+16;
+    if(it.y+30>=top&&Math.abs(cx-binX)<=27){
+      S.items.splice(i,1);
+      if(it.d.bin===binType){
+        var pts=10+Math.min(S.streak,5)*2;S.score+=pts;S.streak++;S.right++;
+        burst(binX,top,'#3DBA5C');pop('+'+pts,binX,top-8,'#FFFFFF');
+        say(true,'Correcto',it.d.name+' va en la caneca '+BINNAME[it.d.bin]+'. '+it.d.why);
+      }else{
+        S.wrong++;S.streak=0;S.time=Math.max(0,S.time-3);S.shake=.25;S.flash=.3;
+        burst(binX,top,'#D94A3B');pop('-3 s',binX,top-8,'#FF8A78');
+        S.mist.push({n:it.d.name,b:BINNAME[it.d.bin]});
+        say(false,'Caneca equivocada',it.d.name+' va en la caneca '+BINNAME[it.d.bin]+', no en la '+BINNAME[binType]+'. '+it.d.why);
+      }
+    }else if(it.y>H-34){
+      S.items.splice(i,1);S.missed++;S.streak=0;pop('Se cayó',clamp(cx,30,W-30),H-40,'#FFFFFF');
+      say(false,'Se cayó',it.d.name+' no llegó a ninguna caneca. Va en la '+BINNAME[it.d.bin]+'.');
+    }
+  }
+}
+function txt(t,x,y,col,size,al){
+  ctx.font=size+'px "Press Start 2P", monospace';ctx.textAlign=al||'left';ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#10241A';ctx.fillText(t,x+1,y+1);ctx.fillStyle=col;ctx.fillText(t,x,y);
+}
+function render(){
+  ctx.save();
+  if(S.shake>0&&!reduce)ctx.translate(Math.round((Math.random()-.5)*5),0);
+  ctx.drawImage(bg,0,0);
+  S.items.forEach(function(it){ctx.drawImage(it.cv,Math.round(it.x),Math.round(it.y))});
+  var by=H-54;
+  ctx.drawImage(binSpr[binType],Math.round(binX-24),by);
+  txt(BINNAME[binType].toUpperCase(),Math.round(binX),by-2,'#FFFFFF',8,'center');
+  S.parts.forEach(function(p){ctx.fillStyle=p.c;ctx.fillRect(Math.round(p.x),Math.round(p.y),3,3)});
+  S.pops.forEach(function(p){txt(p.t,Math.round(p.x),Math.round(p.y),p.c,8,'center')});
+  ctx.fillStyle='rgba(16,36,26,.88)';ctx.fillRect(0,0,W,22);
+  var low=S.time<10&&state==='playing';
+  txt('TIEMPO '+Math.ceil(S.time),6,15,low&&Math.floor(blink*4)%2?'#FF8A78':'#FFFFFF',8,'left');
+  txt('PTS '+S.score,W-6,15,'#F4C20D',8,'right');
+  if(S.streak>1)txt('x'+S.streak,W/2+22,15,'#3DBA5C',8,'center');
+  ctx.fillStyle='#10241A';ctx.fillRect(0,22,W,5);
+  ctx.fillStyle=S.time<10?'#D94A3B':S.time<25?'#F4C20D':'#3DBA5C';
+  ctx.fillRect(0,22,Math.round(W*S.time/DUR),5);
+  if(S.flash>0){ctx.fillStyle='rgba(217,74,59,'+(S.flash*0.9)+')';ctx.fillRect(0,0,W,H)}
+  if(state!=='playing'){
+    ctx.fillStyle='rgba(16,36,26,.68)';ctx.fillRect(0,27,W,H-27);
+    if(state==='idle'){
+      txt('JUSTICIEROS',W/2,100,'#F4C20D',16,'center');
+      txt('ECOLÓGICOS',W/2,124,'#FFFFFF',16,'center');
+      if(Math.floor(blink*1.6)%2===0){txt('CLIC / ESPACIO',W/2,190,'#FFFFFF',8,'center');txt('PARA JUGAR',W/2,206,'#FFFFFF',8,'center')}
+      txt('1 2 3  CANECAS',W/2,248,'#3DBA5C',8,'center');
+      txt('K  CAMBIA CONTROL',W/2,266,'#3DBA5C',8,'center');
+    }else{
+      txt('FIN DEL TIEMPO',W/2,110,'#F4C20D',12,'center');
+      txt('PUNTAJE '+S.score,W/2,148,'#FFFFFF',10,'center');
+      if(Math.floor(blink*1.6)%2===0)txt('CLIC PARA REPETIR',W/2,214,'#FFFFFF',8,'center');
+    }
+  }
+  ctx.restore();
+}
+var last=performance.now(),vis=true;
+if('IntersectionObserver' in window)new IntersectionObserver(function(es){vis=es[0].isIntersecting;last=performance.now()}).observe(cv);
+function frame(now){
+  requestAnimationFrame(frame);
+  if(!vis)return;
+  var dt=Math.min(.05,(now-last)/1000);last=now;blink+=dt;
+  if(!document.hidden)update(dt);
+  render();
+}
+requestAnimationFrame(frame);
+
+function toX(e){var r=cv.getBoundingClientRect();return (e.clientX-r.left)*W/r.width}
+function focusGame(){try{G.focus({preventScroll:true})}catch(e){}}
+cv.addEventListener('pointerdown',function(e){
+  focusGame();
+  if(state!=='playing'){start();return}
+  if(mode==='raton')binX=toX(e);
+});
+cv.addEventListener('pointermove',function(e){if(mode==='raton'&&state==='playing')binX=toX(e)});
+$$('.binbtn').forEach(function(b){b.addEventListener('click',function(){setBin(+b.dataset.bin)})});
+$('#start').addEventListener('click',function(){start();focusGame()});
+$('#mode').addEventListener('click',function(){setMode(mode==='raton'?'teclado':'raton')});
+G.addEventListener('keydown',function(e){
+  var k=e.key,onRoot=(e.target===G||e.target===cv);
+  if(k==='k'||k==='K'){setMode(mode==='raton'?'teclado':'raton');e.preventDefault();return}
+  if(k==='1'||k==='2'||k==='3'){setBin(+k-1);return}
+  if(!onRoot)return;
+  if(k===' '||k==='Enter'){if(state!=='playing')start();e.preventDefault();return}
+  if(state!=='playing')return;
+  if(k==='ArrowLeft'||k==='a'||k==='A'){keys.l=1;e.preventDefault()}
+  else if(k==='ArrowRight'||k==='d'||k==='D'){keys.r=1;e.preventDefault()}
+  else if(k==='ArrowUp'){setBin((binType+2)%3);e.preventDefault()}
+  else if(k==='ArrowDown'){setBin((binType+1)%3);e.preventDefault()}
+});
+G.addEventListener('keyup',function(e){
+  var k=e.key;
+  if(k==='ArrowLeft'||k==='a'||k==='A')keys.l=0;
+  if(k==='ArrowRight'||k==='d'||k==='D')keys.r=0;
+});
+G.addEventListener('blur',function(){keys.l=keys.r=0});
+})();
+</script>
+
+</body></html>
